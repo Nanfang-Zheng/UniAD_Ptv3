@@ -25,7 +25,7 @@ from mmseg import __version__ as mmseg_version
 warnings.filterwarnings("ignore")
 
 from mmcv.utils import TORCH_VERSION, digit_version
-
+import debugpy
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a detector')
@@ -106,6 +106,11 @@ def main():
     if cfg.get('custom_imports', None):
         from mmcv.utils import import_modules_from_strings
         import_modules_from_strings(**cfg['custom_imports'])
+
+    # debugpy.listen(2345)
+    # print("Waiting for debugger attach")
+    # debugpy.wait_for_client()
+    # print("Debugger attached")
 
     # import modules from plguin/xx, registry will be updated
     if hasattr(cfg, 'plugin'):

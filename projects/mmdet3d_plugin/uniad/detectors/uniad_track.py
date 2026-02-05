@@ -71,6 +71,7 @@ class UniADTrack(MVXTwoStageDetector):
         freeze_bn=False,
         freeze_bev_encoder=False,
         queue_length=3,
+        **kwargs,
     ):
         super(UniADTrack, self).__init__(
             img_backbone=img_backbone,
@@ -79,6 +80,7 @@ class UniADTrack(MVXTwoStageDetector):
             train_cfg=train_cfg,
             test_cfg=test_cfg,
             pretrained=pretrained,
+            **kwargs,
         )
 
         self.grid_mask = GridMask(
@@ -246,6 +248,8 @@ class UniADTrack(MVXTwoStageDetector):
             ref_pts (Tensor): (num_query, 3).  in inevrse sigmoid space
         """
         # print(l2g_r1.type(), l2g_t1.type(), ref_pts.type())
+        if isinstance(time_delta, float):
+            time_delta = torch.tensor(time_delta, device=velocity.device)
         time_delta = time_delta.type(torch.float)
         num_query = ref_pts.size(0)
         velo_pad_ = velocity.new_zeros((num_query, 1))
@@ -489,7 +493,7 @@ class UniADTrack(MVXTwoStageDetector):
         out["sdc_embedding"] = sdc_instance.output_embedding[0]
         return out
 
-    @auto_fp16(apply_to=("img", "points"))
+    @auto_fp16(apply_to=("img"))
     def forward_track_train(self,
                             img,
                             gt_bboxes_3d,

@@ -20,6 +20,7 @@ from projects.mmdet3d_plugin.uniad.apis.test import custom_multi_gpu_test
 from mmdet.datasets import replace_ImageToTensor
 import time
 import os.path as osp
+import debugpy
 
 warnings.filterwarnings("ignore")
 
@@ -108,6 +109,11 @@ def parse_args():
 def main():
     args = parse_args()
 
+    debugpy.listen(2345)
+    print("Waiting for debugger attach")
+    debugpy.wait_for_client()
+    print("Debugger attached")
+    
     assert args.out or args.eval or args.format_only or args.show \
         or args.show_dir, \
         ('Please specify at least one operation (save/eval/format/show the '

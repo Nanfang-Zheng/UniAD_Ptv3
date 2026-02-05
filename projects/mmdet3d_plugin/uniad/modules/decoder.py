@@ -70,63 +70,90 @@ class DetectionTransformerDecoder(TransformerLayerSequence):
                 reg_branches=None,
                 key_padding_mask=None,
                 **kwargs):
-        """Forward function for `Detr3DTransformerDecoder`.
-        Args:
-            query (Tensor): Input query with shape
-                `(num_query, bs, embed_dims)`.
-            reference_points (Tensor): The reference
-                points of offset. has shape
-                (bs, num_query, 4) when as_two_stage,
-                otherwise has shape ((bs, num_query, 2).
-            reg_branch: (obj:`nn.ModuleList`): Used for
-                refining the regression results. Only would
-                be passed when with_box_refine is True,
-                otherwise would be passed a `None`.
-        Returns:
-            Tensor: Results with shape [1, num_query, bs, embed_dims] when
-                return_intermediate is `False`, otherwise it has shape
-                [num_layers, num_query, bs, embed_dims].
-        """
-        output = query
-        intermediate = []
-        intermediate_reference_points = []
-        for lid, layer in enumerate(self.layers):
+        """前向传播函数，实现DETR3D解码器的核心逻辑。
+        
+        该函数通过多层解码器处理输入查询，并根据参考点和回归分支更新输出结果。
+        支持返回中间层结果，用于模型的细化和分析。
 
-            reference_points_input = reference_points[..., :2].unsqueeze(
-                2)  # BS NUM_QUERY NUM_LEVEL 2
+        Args:
+            query (Tensor): 输入查询张量，形状为 `(num_query, bs, embed_dims)`，
+                num_query表示查询的数量，bs表示批次大小，embed_dims表示嵌入维度。
+            reference_points (Tensor): 偏移的参考点张量，
+                当使用两阶段检测时形状为 `(bs, num_query, 4)`，
+                否则形状为 `(bs, num_query, 2)`。
+            reg_branches (obj:`nn.ModuleList`, 可选): 用于细化回归结果的分支，
+                只有当with_box_refine为True时才会传入，否则为None。
+            key_padding_mask (Tensor, 可选): 键序列的填充掩码，用于指示哪些位置是填充的。
+            *args: 传递给解码器层的其他位置参数。
+            **kwargs: 传递给解码器层的其他关键字参数。
+
+        Returns:
+            tuple: 包含以下元素的元组：
+                - output (Tensor): 解码器的最终输出，
+                  当return_intermediate为False时，形状为 `[num_query, bs, embed_dims]`；
+                  否则形状为 `[num_layers, num_query, bs, embed_dims]`。
+                - reference_points (Tensor): 更新后的参考点，
+                  形状与输入的reference_points相同。
+        """
+        output = query  # 初始化输出为输入查询
+        intermediate = []  # 存储中间层输出的列表
+        intermediate_reference_points = []  # 存储中间层参考点的列表
+        
+        # 遍历所有解码器层
+        for lid, layer in enumerate(self.layers):
+            # 处理参考点：只保留前两维(x,y)，并在第2维添加一个维度，得到形状(BS, NUM_QUERY, NUM_LEVEL, 2)
+            reference_points_input = reference_points[..., :2].unsqueeze(2)
+            
+            # 通过当前解码器层处理输入
             output = layer(
                 output,
                 *args,
                 reference_points=reference_points_input,
                 key_padding_mask=key_padding_mask,
                 **kwargs)
+            
+            # 调整输出维度顺序：(num_query, bs, embed_dims) -> (bs, num_query, embed_dims)
             output = output.permute(1, 0, 2)
 
+            # 如果存在回归分支，使用它来更新参考点
             if reg_branches is not None:
+                # 通过当前层的回归分支处理输出
                 tmp = reg_branches[lid](output)
 
+                # 确保参考点的最后一个维度是3 (x, y, z)
                 assert reference_points.shape[-1] == 3
 
+                # 创建新的参考点张量，形状与输入参考点相同
                 new_reference_points = torch.zeros_like(reference_points)
-                new_reference_points[..., :2] = tmp[
-                    ..., :2] + inverse_sigmoid(reference_points[..., :2])
-                new_reference_points[..., 2:3] = tmp[
-                    ..., 4:5] + inverse_sigmoid(reference_points[..., 2:3])
+                
+                # 更新x, y坐标：回归预测值 + 参考点的逆sigmoid值，然后再应用sigmoid
+                new_reference_points[..., :2] = tmp[..., :2] + inverse_sigmoid(reference_points[..., :2])
+                
+                # 更新z坐标：回归预测的第5个值 + 参考点z的逆sigmoid值，然后再应用sigmoid
+                new_reference_points[..., 2:3] = tmp[..., 4:5] + inverse_sigmoid(reference_points[..., 2:3])
 
+                # 应用sigmoid函数，将坐标值归一化到[0, 1]范围
                 new_reference_points = new_reference_points.sigmoid()
 
+                # 更新参考点（ detach()用于截断梯度流，避免梯度回传到参考点）
                 reference_points = new_reference_points.detach()
 
+            # 恢复输出维度顺序：(bs, num_query, embed_dims) -> (num_query, bs, embed_dims)
             output = output.permute(1, 0, 2)
+            
+            # 如果需要返回中间结果，将当前输出和参考点添加到中间列表
             if self.return_intermediate:
                 intermediate.append(output)
                 intermediate_reference_points.append(reference_points)
 
+        # 根据配置返回结果
         if self.return_intermediate:
-            return torch.stack(intermediate), torch.stack(
-                intermediate_reference_points)
-
-        return output, reference_points
+            # 返回所有中间层的输出和参考点，形状分别为
+            # [num_layers, num_query, bs, embed_dims] 和 [num_layers, bs, num_query, 3]
+            return torch.stack(intermediate), torch.stack(intermediate_reference_points)
+        else:
+            # 只返回最后一层的输出和参考点
+            return output, reference_points
 
 
 @ATTENTION.register_module()

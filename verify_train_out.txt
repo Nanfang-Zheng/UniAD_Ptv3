@@ -1,0 +1,34 @@
+Initializing...
+/home/zhengnanfang/anaconda3/envs/uniad_ptv3/lib/python3.9/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+Config loaded
+Building model...
+/home/zhengnanfang/PTv3_proj/UniAD/projects/mmdet3d_plugin/uniad/modules/custom_base_transformer_layer.py:77: UserWarning: The arguments `feedforward_channels` in BaseTransformerLayer has been deprecated, now you should set `feedforward_channels` and other FFN related arguments to a dict named `ffn_cfgs`. 
+  warnings.warn(
+/home/zhengnanfang/PTv3_proj/UniAD/projects/mmdet3d_plugin/uniad/modules/custom_base_transformer_layer.py:77: UserWarning: The arguments `ffn_dropout` in BaseTransformerLayer has been deprecated, now you should set `ffn_drop` and other FFN related arguments to a dict named `ffn_cfgs`. 
+  warnings.warn(
+/home/zhengnanfang/PTv3_proj/UniAD/projects/mmdet3d_plugin/uniad/modules/custom_base_transformer_layer.py:77: UserWarning: The arguments `ffn_num_fcs` in BaseTransformerLayer has been deprecated, now you should set `num_fcs` and other FFN related arguments to a dict named `ffn_cfgs`. 
+  warnings.warn(
+Model built: <class 'projects.mmdet3d_plugin.uniad.detectors.uniad_lidar_track.UniADLidarTrack'>
+forward_train method found.
+Preparing mock data...
+Testing forward_train...
+forward_train failed: _forward_single_frame_train() takes 6 positional arguments but 15 were given
+Traceback (most recent call last):
+  File "/home/zhengnanfang/PTv3_proj/UniAD/verify_train_step.py", line 163, in main
+    losses = model.forward_train(
+  File "/home/zhengnanfang/PTv3_proj/UniAD/mmcv/mmcv/runner/fp16_utils.py", line 116, in new_func
+    return old_func(*args, **kwargs)
+  File "/home/zhengnanfang/PTv3_proj/UniAD/projects/mmdet3d_plugin/uniad/detectors/uniad_lidar_track.py", line 174, in forward_train
+    losses_track, outs_track = self.forward_track_train(img, gt_bboxes_3d, gt_labels_3d, gt_past_traj, gt_past_traj_mask, gt_inds, gt_sdc_bbox, gt_sdc_label,
+  File "/home/zhengnanfang/PTv3_proj/UniAD/mmcv/mmcv/runner/fp16_utils.py", line 116, in new_func
+    return old_func(*args, **kwargs)
+  File "/home/zhengnanfang/PTv3_proj/UniAD/projects/mmdet3d_plugin/uniad/detectors/uniad_lidar_track.py", line 519, in forward_track_train
+    return super().forward_track_train(
+  File "/home/zhengnanfang/PTv3_proj/UniAD/mmcv/mmcv/runner/fp16_utils.py", line 116, in new_func
+    return old_func(*args, **kwargs)
+  File "/home/zhengnanfang/PTv3_proj/UniAD/projects/mmdet3d_plugin/uniad/detectors/uniad_track.py", line 556, in forward_track_train
+    frame_res = self._forward_single_frame_train(
+  File "/home/zhengnanfang/PTv3_proj/UniAD/mmcv/mmcv/runner/fp16_utils.py", line 116, in new_func
+    return old_func(*args, **kwargs)
+TypeError: _forward_single_frame_train() takes 6 positional arguments but 15 were given

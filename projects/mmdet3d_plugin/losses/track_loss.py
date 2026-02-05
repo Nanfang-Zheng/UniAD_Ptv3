@@ -230,6 +230,8 @@ class ClipMatcher(nn.Module):
         return losses
     
     def compute_past_traj_loss(self, src, tgt, tgt_mask):
+        if tgt_mask.dim() == 2 and src.dim() == 3:
+             tgt_mask = tgt_mask.unsqueeze(-1)
         loss = torch.abs(src - tgt) * tgt_mask
         return torch.sum(loss)/ (torch.sum(tgt_mask>0) + 1e-5)
 

@@ -4,3 +4,4 @@ from .motion_head import MotionHead
 from .occ_head import OccHead
 from .planning_head import PlanningHeadSingleMode
 from .bevformer_head import BEVFormerHead
+from .track_head_ptv3 import UniADPTv3TrackHead
