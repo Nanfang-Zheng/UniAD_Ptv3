@@ -562,18 +562,44 @@ class UniADPTv3Track(UniADTrack):
             l2g_r_mat = l2g_r_mat[0]
         # Extract Points Feature
         # Note: simple_test_track is usually called frame by frame
-        # points here is likely (1, N, C) or List[Tensor]
-        if points is not None:
-             # If points is list of tensors (one per sample in batch, but bs=1)
-             if isinstance(points, list):
-                 pass 
-             else:
-                 points = [points]
-             if grid_coord is not None and not isinstance(grid_coord, list):
-                grid_coord = [grid_coord]
-             if grid_coord[0].dim() == 3 and grid_coord[0].shape[0] == 1:
-                    grid_coord = [gc[0] for gc in grid_coord]
-             self.extract_pts_feat(points, grid_coord)
+        # Standardize to train-path style: List[Tensor], each Tensor is (N, C)/(N, 3)
+        points_single = points
+        grid_coord_single = None
+        
+        if grid_coord is not None:
+                grid_coord_single = [g[0] for g in grid_coord]
+        # if points is not None:
+        #     if torch.is_tensor(points):
+        #         points = [points]
+        #     elif isinstance(points, (list, tuple)):
+        #         points = list(points)
+        #         if len(points) > 0 and isinstance(points[0], (list, tuple)):
+        #             points = list(points[0])
+        #     else:
+        #         raise TypeError(f"Unsupported points type in simple_test_track: {type(points)}")
+
+        #     if grid_coord is None:
+        #         raise ValueError("grid_coord is required when points is provided in simple_test_track.")
+        #     if torch.is_tensor(grid_coord):
+        #         grid_coord = [grid_coord]
+        #     elif isinstance(grid_coord, (list, tuple)):
+        #         grid_coord = list(grid_coord)
+        #         if len(grid_coord) > 0 and isinstance(grid_coord[0], (list, tuple)):
+        #             grid_coord = list(grid_coord[0])
+        #     else:
+        #         raise TypeError(f"Unsupported grid_coord type in simple_test_track: {type(grid_coord)}")
+
+        #     points = [p[0] if p.dim() == 3 and p.shape[0] == 1 else p for p in points]
+        #     grid_coord = [gc[0] if gc.dim() == 3 and gc.shape[0] == 1 else gc for gc in grid_coord]
+
+        #     if len(points) != len(grid_coord):
+        #         raise ValueError(
+        #             f"points/grid_coord length mismatch in simple_test_track: "
+        #             f"{len(points)} vs {len(grid_coord)}"
+        #         )
+
+            # self.extract_pts_feat(points, grid_coord)
+        self.extract_pts_feat(points_single, grid_coord_single)
 
 
         """ init track instances for first frame """

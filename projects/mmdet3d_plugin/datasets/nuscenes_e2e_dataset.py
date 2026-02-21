@@ -265,6 +265,18 @@ class NuScenesE2EDataset(NuScenesDataset):
         convert sample dict into one single sample.
         """
         imgs_list = [each['img'].data for each in queue]
+        points_list = None
+        grid_coord_list = None
+        if 'points' in queue[0]:
+            points_list = [
+                each['points'].data if isinstance(each['points'], DC) else each['points']
+                for each in queue
+            ]
+        if 'grid_coord' in queue[0]:
+            grid_coord_list = []
+            for each in queue:
+                grid_coord = each['grid_coord'].data if isinstance(each['grid_coord'], DC) else each['grid_coord']
+                grid_coord_list.append(to_tensor(grid_coord))
         gt_labels_3d_list = [each['gt_labels_3d'].data for each in queue]
         gt_sdc_label_list = [each['gt_sdc_label'].data for each in queue]
         gt_inds_list = [to_tensor(each['gt_inds']) for each in queue]
@@ -324,6 +336,10 @@ class NuScenesE2EDataset(NuScenesDataset):
         queue['gt_past_traj_mask'] = DC(gt_past_traj_mask_list)
         queue['gt_future_boxes'] = DC(gt_future_boxes_list, cpu_only=True)
         queue['gt_future_labels'] = DC(gt_future_labels_list)
+        if points_list is not None:
+            queue['points'] = DC(points_list, cpu_only=False, stack=False)
+        if grid_coord_list is not None:
+            queue['grid_coord'] = DC(grid_coord_list, cpu_only=False, stack=False)
         return queue
 
     def get_ann_info(self, index):

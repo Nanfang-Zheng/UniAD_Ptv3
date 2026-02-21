@@ -119,7 +119,7 @@ train_pipeline = [
         return_min_coord=True
     ),
     
-    dict(type="DefaultFormatBundle3D", class_names=class_names),
+    dict(type="Ptv3CustomDefaultFormatBundle3D", class_names=class_names),
     dict(
         type="CustomCollect3D",
         keys=[
@@ -153,7 +153,7 @@ test_pipeline = [
         type="GridSample_migrate",
         grid_size=0.05,
         hash_type="fnv",
-        mode="train",
+        mode="test",
         return_grid_coord=True,
         return_min_coord=True
     ),
@@ -163,7 +163,7 @@ test_pipeline = [
         pts_scale_ratio=1,
         flip=False,
         transforms=[
-            dict(type="DefaultFormatBundle3D", class_names=class_names, with_label=False),
+            dict(type="Ptv3CustomDefaultFormatBundle3D", class_names=class_names, with_label=False),
             dict(
                 type="CustomCollect3D", 
                 keys=[

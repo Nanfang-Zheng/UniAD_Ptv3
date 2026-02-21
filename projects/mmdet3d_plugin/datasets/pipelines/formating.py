@@ -37,3 +37,25 @@ class CustomDefaultFormatBundle3D(DefaultFormatBundle3D):
             to_tensor(results['gt_map_masks']), stack=True)
 
         return results
+
+
+@PIPELINES.register_module()
+class Ptv3CustomDefaultFormatBundle3D(DefaultFormatBundle3D):
+    """PTv3-specific formatting bundle.
+
+    Keep `points` behavior from `DefaultFormatBundle3D` and force PTv3 fields
+    (`grid_coord`, optional `min_coord`) to be non-stacked DataContainers so
+    collate_fn does not create an extra batch dimension like (B, N, 3).
+    """
+
+    def __call__(self, results):
+        results = super(Ptv3CustomDefaultFormatBundle3D, self).__call__(results)
+
+        if 'grid_coord' in results:
+            results['grid_coord'] = DC(to_tensor(results['grid_coord']), stack=False)
+        if 'min_coord' in results:
+            results['min_coord'] = DC(to_tensor(results['min_coord']), stack=False)
+        if 'gt_map_masks' in results:
+            results['gt_map_masks'] = DC(to_tensor(results['gt_map_masks']), stack=True)
+
+        return results

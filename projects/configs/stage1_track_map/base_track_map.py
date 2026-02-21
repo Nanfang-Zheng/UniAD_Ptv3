@@ -46,7 +46,7 @@ _dim_half_ = _pos_dim_
 canvas_size = (bev_h_, bev_w_)
 
 # NOTE: You can change queue_length from 5 to 3 to save GPU memory, but at risk of performance drop.
-queue_length = 1    # each sequence contains `queue_length` frames.
+queue_length = 2    # each sequence contains `queue_length` frames.
 
 ### traj prediction args ###
 predict_steps = 12
@@ -526,8 +526,8 @@ data = dict(
         classes=class_names,
         modality=input_modality,
         samples_per_gpu=1,
-        # eval_mod=['det', 'track', 'map'],
-        eval_mod=['det','track'],
+        eval_mod=['det', 'track', 'map'],
+        # eval_mod=['det','track'],
 
         occ_receptive_field=3,
         occ_n_future=occ_n_future_max,

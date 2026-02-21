@@ -272,7 +272,10 @@ class CustomCollect3D(object):
         img_metas = {}
         for key in self.meta_keys:
             if key in results:
-                img_metas[key] = results[key]
+                value = results[key]
+                if isinstance(value, DC):
+                    value = value.data
+                img_metas[key] = value
 
         data['img_metas'] = DC(img_metas, cpu_only=True)
         for key in self.keys:
