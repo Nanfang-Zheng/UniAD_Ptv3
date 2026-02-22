@@ -1153,6 +1153,7 @@ class NuScenesE2EDataset(NuScenesDataset):
             'v1.0-trainval': 'val',
         }
         detail = dict()
+        metric_prefix = f'{result_name}_NuScenes'
 
         if 'det' in self.eval_mod:
             self.nusc_eval = NuScenesEval_custom(
@@ -1171,7 +1172,6 @@ class NuScenesE2EDataset(NuScenesDataset):
                 osp.join(
                     output_dir_det,
                     'metrics_summary.json'))
-            metric_prefix = f'{result_name}_NuScenes'
             for name in self.CLASSES:
                 for k, v in metrics['label_aps'][name].items():
                     val = float('{:.4f}'.format(v))
@@ -1188,6 +1188,19 @@ class NuScenesE2EDataset(NuScenesDataset):
             detail['{}/mAP'.format(metric_prefix)] = metrics['mean_ap']
 
         if 'track' in self.eval_mod:
+            pred_json = mmcv.load(result_path)
+            pred_results = pred_json.get('results', {})
+            num_pred_boxes = sum(len(v) for v in pred_results.values())
+            if num_pred_boxes == 0:
+                print('[WARN] No tracking predictions found in results_nusc.json. '
+                      'Skip TrackingEval and set track metrics to 0.')
+                keys = ['amota', 'amotp', 'recall', 'motar',
+                        'gt', 'mota', 'motp', 'mt', 'ml', 'faf',
+                        'tp', 'fp', 'fn', 'ids', 'frag', 'tid', 'lgd']
+                for key in keys:
+                    detail['{}/{}'.format(metric_prefix, key)] = 0.0
+                return detail
+
             cfg = config_factory("tracking_nips_2019")
             self.nusc_eval_track = TrackingEval(
                 config=cfg,
